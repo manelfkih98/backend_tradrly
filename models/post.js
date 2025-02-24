@@ -1,0 +1,35 @@
+const mongoose = require('mongoose');
+
+const PostSchema = new mongoose.Schema({
+    jobId: {  
+        type: mongoose.Schema.Types.ObjectId,  
+        ref: 'offreemplois',  
+        required: true
+    },
+    name: {
+        type: String,
+        required: true
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        match: [/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/, ]
+    },
+    number: {
+        type: String,
+        required: true
+    },
+    niveau: {
+        type: String,
+        required: true,
+       
+    },
+    cv_url: {
+        type: String,
+        required: true
+    }
+}, { timestamps: true });  
+
+const Post = mongoose.model('Post', PostSchema);
+module.exports = Post;

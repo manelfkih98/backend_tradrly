@@ -71,6 +71,7 @@ exports.deleteArticle = async (req, res) => {
         const updatedArticle = await Article.findByIdAndUpdate(
             req.params.id,{ name_article, description, imageUrl }
         );
+        
 
         if (!updatedArticle) {
             return res.status(404).json({ message: "Article non trouvé !" });

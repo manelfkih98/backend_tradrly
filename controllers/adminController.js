@@ -2,7 +2,6 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const Admin = require('../models/admin');
 
-// Inscription d'un administrateur
 const registerAdmin = async (req, res) => {
     const { fullName, email, password } = req.body;
 
@@ -18,7 +17,7 @@ const registerAdmin = async (req, res) => {
         const newAdmin = new Admin({ fullName, email, password: hashedPassword });
         await newAdmin.save();
 
-        // Création du token JWT
+      
         const token = jwt.sign(
             { id: newAdmin._id, email: newAdmin.email },
             process.env.JWT_SECRET_KEY,
@@ -31,7 +30,6 @@ const registerAdmin = async (req, res) => {
     }
 };
 
-// Connexion d'un administrateur
 const loginAdmin = async (req, res) => {
     const { email, password } = req.body;
 
