@@ -3,10 +3,10 @@ const Departement = require("../models/departement");
 
 exports.addOffreEmploi = async (req, res) => {
   try {
-    const { id_offre, titre, description, status, date_limite, departementId } =
+    const { id_offre, titre, description, status, date_limite, departement_name} =
       req.body;
-    const departement = await Departement.findById(departementId);
-    if (!departement) {
+      const departement = await Departement.findOne({ NameDep: departement_name });
+      if (!departement) {
       return res.status(400).json({ message: "Département non trouvé" });
     }
     if (new Date(date_limite) <= new Date()) {
@@ -20,7 +20,7 @@ exports.addOffreEmploi = async (req, res) => {
       description,
       status: status ?? true,
       date_limite,
-      departement: departementId,
+      departement:departement.id,
     });
 
     await newOffre.save();
@@ -53,23 +53,48 @@ exports.getOffreById = async (req, res) => {
   }
 };
 
+
+
 exports.updateOffre = async (req, res) => {
   try {
     const { id } = req.params;
-    const updateoffre = req.body;
+    let updateoffre = req.body;
+
+    console.log(updateoffre);
+
+ 
+ 
+    if (updateoffre.departement_name) {
+      const departement = await Departement.findOne({ NameDep: updateoffre.departement_name });
+
+      if (!departement) {
+        return res.status(404).json({ message: "Département non trouvé" });
+      }
+
+      
+      updateoffre.departement = departement._id;
+      delete updateoffre.departement_name;
+    }
+
+    
     const offreUpdated = await OffreEmploi.findByIdAndUpdate(id, updateoffre, {
       new: true,
+      runValidators: true,
     });
+
     if (!offreUpdated) {
-      return res.status(404).json({ message: "offre non trouvée" });
+      return res.status(404).json({ message: "Offre non trouvée" });
     }
-    res
-      .status(200)
-      .json({ message: "offre mise à jour avec succeé", offreUpdated });
+
+    return res.status(200).json({
+      message: "Offre mise à jour avec succès",
+      offre: offreUpdated,
+    });
   } catch (error) {
-    res.status(500).json({ message: "Erreur serveur", error });
+    return res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
+
 
 exports.deleteOffre = async (req, res) => {
     try {

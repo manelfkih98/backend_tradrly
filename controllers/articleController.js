@@ -84,19 +84,4 @@ exports.deleteArticle = async (req, res) => {
 };
 
 
-/*exports.getArticleById = async (req, res) => {
-    try {
-        const article = await Article.findById(req.params.id);
 
-        if (!article) {
-            return res.status(404).json({ message: "Article non trouvé" });
-        }
-
-      
-        const imagesWithUrls = article.images.map(img => `${req.protocol}://${req.get('host')}/${img}`);
-
-        res.json({ ...article.toObject(), images: imagesWithUrls });
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
-    }
-};*/
