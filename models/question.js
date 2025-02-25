@@ -1,28 +1,21 @@
-const mongoose = require('mongoose'); // Erase if already required
+const mongoose = require("mongoose");
 
-// Declare the Schema of the Mongo model
-var userSchema = new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
-        unique:true,
-        index:true,
+const questionSchema = new mongoose.Schema({
+  questionText: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  reponse: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "reponse", 
+  },
+  propositions: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "proposition",
     },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    mobile:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    password:{
-        type:String,
-        required:true,
-    },
+  ],
 });
 
-//Export the model
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model("question", questionSchema);

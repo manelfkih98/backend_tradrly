@@ -3,10 +3,12 @@ const Departement = require("../models/departement");
 
 exports.addOffreEmploi = async (req, res) => {
   try {
-    const { id_offre, titre, description, status, date_limite, departement_name} =
+    const { titre, description, status, date_limite, departement_name } =
       req.body;
-      const departement = await Departement.findOne({ NameDep: departement_name });
-      if (!departement) {
+    const departement = await Departement.findOne({
+      NameDep: departement_name,
+    });
+    if (!departement) {
       return res.status(400).json({ message: "Département non trouvé" });
     }
     if (new Date(date_limite) <= new Date()) {
@@ -15,12 +17,11 @@ exports.addOffreEmploi = async (req, res) => {
         .json({ message: "La date limite doit être future." });
     }
     const newOffre = new OffreEmploi({
-      id_offre,
       titre,
       description,
       status: status ?? true,
       date_limite,
-      departement:departement.id,
+      departement: departement.id,
     });
 
     await newOffre.save();
@@ -53,8 +54,6 @@ exports.getOffreById = async (req, res) => {
   }
 };
 
-
-
 exports.updateOffre = async (req, res) => {
   try {
     const { id } = req.params;
@@ -62,21 +61,19 @@ exports.updateOffre = async (req, res) => {
 
     console.log(updateoffre);
 
- 
- 
     if (updateoffre.departement_name) {
-      const departement = await Departement.findOne({ NameDep: updateoffre.departement_name });
+      const departement = await Departement.findOne({
+        NameDep: updateoffre.departement_name,
+      });
 
       if (!departement) {
         return res.status(404).json({ message: "Département non trouvé" });
       }
 
-      
       updateoffre.departement = departement._id;
       delete updateoffre.departement_name;
     }
 
-    
     const offreUpdated = await OffreEmploi.findByIdAndUpdate(id, updateoffre, {
       new: true,
       runValidators: true,
@@ -91,23 +88,23 @@ exports.updateOffre = async (req, res) => {
       offre: offreUpdated,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Erreur serveur", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Erreur serveur", error: error.message });
   }
 };
 
-
 exports.deleteOffre = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const offreDeleted = await OffreEmploi.findByIdAndDelete(id);
+  try {
+    const { id } = req.params;
+    const offreDeleted = await OffreEmploi.findByIdAndDelete(id);
 
-        if (!offreDeleted) {
-            return res.status(404).json({ message: "Offre non trouvée" });
-        }
-
-        res.status(200).json({ message: "Offre supprimée avec succès" });
-    } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
+    if (!offreDeleted) {
+      return res.status(404).json({ message: "Offre non trouvée" });
     }
-};
 
+    res.status(200).json({ message: "Offre supprimée avec succès" });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error });
+  }
+};

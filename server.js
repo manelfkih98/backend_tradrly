@@ -8,6 +8,8 @@ const offreEmploiRoutes=require("./routers/offreEmploiRoutes")
 const articleRoutes=require('./routers/articleRoutes')
 const postRoutes=require("./routers/postRoutes")
 const projectRoutes =require("./routers/projectRoutes")
+const reponceRoutes=require("./routers/reponceRoutes")
+const propoRoutes=require("./routers/propositionRoutes")
 const app= express();
 
 
@@ -22,6 +24,8 @@ app.use("/depart",departRoutes)
 app.use("/offreEmploi",offreEmploiRoutes)
 app.use("/article",articleRoutes)
 app.use("/post",postRoutes)
+app.use("/reponce",reponceRoutes)
+app.use("/propos",propoRoutes)
 app.use('/uploads', express.static('uploads'));
 
 

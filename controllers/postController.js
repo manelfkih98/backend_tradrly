@@ -1,5 +1,5 @@
 const Post = require("../models/post");
-const upload = require("../middleware/upload");
+//const upload = require("../middleware/upload");
 exports.addPost = async (req, res) => {
   try {
     if (!req.file) {
