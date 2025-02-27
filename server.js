@@ -10,6 +10,8 @@ const postRoutes=require("./routers/postRoutes")
 const projectRoutes =require("./routers/projectRoutes")
 const reponceRoutes=require("./routers/reponceRoutes")
 const propoRoutes=require("./routers/propositionRoutes")
+const questionRoutes=require('./routers/questionRoutes')
+const qcmRoutes=require('./routers/qcmRoutes')
 const app= express();
 
 
@@ -26,6 +28,8 @@ app.use("/article",articleRoutes)
 app.use("/post",postRoutes)
 app.use("/reponce",reponceRoutes)
 app.use("/propos",propoRoutes)
+app.use("/question",questionRoutes)
+app.use('/qcm',qcmRoutes)
 app.use('/uploads', express.static('uploads'));
 
 

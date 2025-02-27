@@ -29,5 +29,5 @@ const offreEmploiShema=new mongoose.Schema({
     }
 }, { timestamps: true });
 
-const OffreEmploi = mongoose.model('OffreEmploi', offreEmploiShema);
+const OffreEmploi = mongoose.model('offreemplois', offreEmploiShema);
 module.exports = OffreEmploi;

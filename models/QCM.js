@@ -1,26 +1,9 @@
-const mongoose = require('mongoose'); 
-var userSchema = new mongoose.Schema({
-    name:{
-        type:String,
-        required:true,
-        unique:true,
-        index:true,
-    },
-    email:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    mobile:{
-        type:String,
-        required:true,
-        unique:true,
-    },
-    password:{
-        type:String,
-        required:true,
-    },
+const mongoose = require('mongoose');
+
+const QCMSchema = new mongoose.Schema({
+ 
+  questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'question' }], 
+  resulalt:{type:Number,require:true}
 });
 
-
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('QCM', QCMSchema);

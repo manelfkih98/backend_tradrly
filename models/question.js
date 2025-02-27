@@ -7,15 +7,23 @@ const questionSchema = new mongoose.Schema({
     trim: true,
   },
   reponse: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "reponse", 
+    type: String,
+    required: true,
+    trim: true,
   },
   propositions: [
     {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "proposition",
+      type: String,
+      required: true,
+      trim: true,
     },
   ],
+  departement: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "departements",
+    required: true,
+  },
+  
 });
 
 module.exports = mongoose.model("question", questionSchema);

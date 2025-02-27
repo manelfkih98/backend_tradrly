@@ -28,7 +28,9 @@ const PostSchema = new mongoose.Schema({
     cv_url: {
         type: String,
         required: true
-    }
+    },
+      password:{type:String,require}
+    
 }, { timestamps: true });  
 
 const Post = mongoose.model('Post', PostSchema);
