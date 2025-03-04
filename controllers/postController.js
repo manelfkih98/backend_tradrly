@@ -137,8 +137,6 @@ exports.accepter = async (req, res) => {
         .json({ message: "Offre d'emploi associée non trouvée." });
     }
 
-   
-
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {
@@ -183,3 +181,62 @@ function generatePassword(length) {
   }
   return password;
 }
+
+exports.addPostWithoutOffre = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Le fichier CV est requis." });
+    }
+
+    const { name, email, number, niveau } = req.body;
+
+    if (!name || !email || !number || !niveau ) {
+      return res.status(400).json({
+        message:
+          "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
+      });
+    }
+
+    const cv_url = `/uploads/${req.file.filename}`;
+    const password = generatePassword(12);
+
+    const newPost = new Post({
+      name,
+      email,
+      number,
+      niveau,
+      cv_url,
+      password
+      
+    });
+    await newPost.save();
+
+    res
+      .status(201)
+      .json({ message: "Candidature ajoutée avec succès", post: newPost });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de l'ajout de la candidature",
+      error: error.message,
+    });
+  }
+};
+
+exports.getPostWithoutOffre = async (req,res)=>
+{
+  try{
+    const PostWithoutOffre =await Post.find({jobId:null})
+    if(PostWithoutOffre.length==0)
+    {
+      res.status(400).json({message:"aucune post WithoutOffre "})
+    }
+    res.status(200).json({post:PostWithoutOffre})
+  }catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Erreur lors de l'ajout de la candidature",
+      error: error.message,
+    })
+
+}}

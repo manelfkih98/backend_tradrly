@@ -1,6 +1,6 @@
 const mongoose =require('mongoose')
 
-const offreEmploiShema=new mongoose.Schema({
+const offreShema=new mongoose.Schema({
 
   titre: {
         type: String,
@@ -26,8 +26,14 @@ const offreEmploiShema=new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'departements',
         required: true
+    },
+    type: {
+        type: String,
+        enum: ['job', 'stage'],
+        required: true
     }
 }, { timestamps: true });
 
-const OffreEmploi = mongoose.model('offreemplois', offreEmploiShema);
-module.exports = OffreEmploi;
+
+const Offre = mongoose.model('offre', offreShema);
+module.exports = Offre;
