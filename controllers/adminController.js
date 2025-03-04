@@ -1,6 +1,14 @@
-const jwt = require('jsonwebtoken');
-const bcrypt = require('bcryptjs');
-const Admin = require('../models/admin');
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+const Admin = require("../models/admin");
+
+const generateAccessToken = (admin) => {
+    return jwt.sign({ id: admin._id, email: admin.email }, process.env.JWT_SECRET_KEY, { expiresIn: "1m" });
+};
+
+const generateRefreshToken = (admin) => {
+    return jwt.sign({ id: admin._id, email: admin.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
+};
 
 const registerAdmin = async (req, res) => {
     const { fullName, email, password } = req.body;
@@ -16,17 +24,18 @@ const registerAdmin = async (req, res) => {
 
         const newAdmin = new Admin({ fullName, email, password: hashedPassword });
         await newAdmin.save();
-
       
-        const token = jwt.sign(
-            { id: newAdmin._id, email: newAdmin.email },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: "1h" }
-        );
+        const accessToken = generateAccessToken(newAdmin);
+        const refreshToken = generateRefreshToken(newAdmin);
 
-        res.status(201).json({ message: "Admin inscrit avec succès !", token });
+     
+        newAdmin.refreshTokens.push(refreshToken);
+        await newAdmin.save();
+
+        res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "Strict" });
+        res.status(201).json({ message: "Admin inscrit avec succès !", accessToken });
     } catch (error) {
-        res.status(500).json({ message: "Erreur serveur", error });
+        res.status(500).json({ message: "Erreur serveur", errorr:error.message });
     }
 };
 
@@ -35,22 +44,20 @@ const loginAdmin = async (req, res) => {
 
     try {
         const admin = await Admin.findOne({ email });
-        if (!admin) {
-            return res.status(400).json({ message: "Admin non trouvé !" });
-        }
+        if (!admin) return res.status(400).json({ message: "Admin non trouvé !" });
 
         const isMatch = await bcrypt.compare(password, admin.password);
-        if (!isMatch) {
-            return res.status(401).json({ message: "Mot de passe incorrect !" });
-        }
+        if (!isMatch) return res.status(401).json({ message: "Mot de passe incorrect !" });
 
-        const token = jwt.sign(
-            { id: admin._id, email: admin.email },
-            process.env.JWT_SECRET_KEY,
-            { expiresIn: "1h" }
-        );
+        const accessToken = generateAccessToken(admin);
+        const refreshToken = generateRefreshToken(admin);
 
-        res.json({ message: "Connexion réussie", token });
+       
+        admin.refreshTokens.push(refreshToken);
+        await admin.save();
+
+        res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "Strict" });
+        res.json({ message: "Connexion réussie", accessToken });
     } catch (error) {
         res.status(500).json({ message: "Erreur serveur", error });
     }
