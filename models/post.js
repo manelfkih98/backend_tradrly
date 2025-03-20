@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const PostSchema = new mongoose.Schema({
     jobId: {  
         type: mongoose.Schema.Types.ObjectId,  
-        ref: 'offres', 
+        ref: 'offre', 
        
     },
     name: {

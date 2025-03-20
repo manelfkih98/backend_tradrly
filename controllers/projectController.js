@@ -24,7 +24,7 @@ exports.addProject = async (req, res) => {
 
     res
       .status(201)
-      .json({ message: "Projet ajouté avec succès.", project: newProject });
+      .json({ message: "Projet ajouté avec succès.", project: newProject,departement_name });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -36,12 +36,15 @@ exports.addProject = async (req, res) => {
 
 exports.getAllProject = async (req, res) => {
   try {
-    const Projects = await Project.find();
-    res.status(200).json(Projects);
+    const projects = await Project.find().populate('departementId');
+
+    res.status(200).json({ projects });
   } catch (error) {
-    res.status(500).json({ message: "erreur serveur", error });
+    res.status(500).json({ message: "Erreur serveur", error });
   }
 };
+
+
 
 exports.getProjectById = async (req, res) => {
   try {

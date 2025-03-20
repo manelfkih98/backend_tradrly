@@ -3,7 +3,7 @@ const {addProject,getAllProject,getProjectById,deleteProject,updateProject}=requ
 const router =express.Router()
   
 
-router.post("/addpost",addProject)
+router.post("/addProject",addProject)
 router.get("/allProject",getAllProject)
 router.get("/getProjectById/:id",getProjectById)
 router.delete("/deleteProject/:id",deleteProject)

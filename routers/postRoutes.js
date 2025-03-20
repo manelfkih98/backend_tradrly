@@ -5,7 +5,7 @@ const { addPost,getAllPost,getPostsByJobId,refuser,accepter,addPostWithoutOffre,
 const router=express.Router()
 
 
-router.post("/addPost", upload.single("cv"), addPost);
+router.post("/addPost", addPost);
  router.get("/getAll",getAllPost)
  router.get("/postByOffre/:jobId",getPostsByJobId)
  router.post("/refuser/:id",refuser)

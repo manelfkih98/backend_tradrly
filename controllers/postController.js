@@ -1,39 +1,109 @@
 const Post = require("../models/post");
-const upload = require("../middleware/upload");
+const {google}=require("googleapis");
+const fs=require("fs");
+const path=require("path");
+const multer=require("multer")
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
+
+const auth = new google.auth.GoogleAuth({
+  keyFile: "C:/tradrly/meniproject.json",
+  scopes: ["https://www.googleapis.com/auth/drive.file"],
+});
+const drive = google.drive({ version: "v3", auth });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/"); 
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname)); 
+  },
+});
+const upload = multer({ storage });
+
+async function uploadFileToDrive(filePath, fileName) {
+  try {
+    const response = await drive.files.create({
+      requestBody: {
+        name: fileName,
+        mimeType: "application/pdf",
+        parents: ["1hoyiqu8KlpuRBfeka3CQG88XJG9AW_So"], 
+      },
+      media: {
+        mimeType: "application/pdf",
+        body: fs.createReadStream(filePath),
+      },
+    });
+
+    
+    await drive.permissions.create({
+      fileId: response.data.id,
+      requestBody: {
+        role: "reader",
+        type: "anyone",
+      },
+    });
+
+   
+    const result = await drive.files.get({
+      fileId: response.data.id,
+      fields: "webViewLink",
+    });
+
+    return result.data.webViewLink;
+  } catch (error) {
+    console.error("Erreur lors de l'upload vers Google Drive:", error);
+    throw error;
+  }
+}
+
 exports.addPost = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "Le fichier CV est requis." });
-    }
+    upload.single("file")(req, res, async (err) => {
+      if (err) {
+        return res.status(400).json({ message: "Erreur lors de l'upload du fichier" });
+      }
 
-    const { name, email, number, niveau, jobId } = req.body;
+      if (!req.file) {
+        return res.status(400).json({ message: "Le fichier CV est requis." });
+      }
 
-    if (!name || !email || !number || !niveau || !jobId) {
-      return res.status(400).json({
-        message:
-          "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
+      const { name, email, number, niveau, jobId } = req.body;
+
+      if (!name || !email || !number || !niveau || !jobId) {
+        return res.status(400).json({
+          message: "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
+        });
+      }
+
+      const filePath = req.file.path;
+      const fileName = req.file.filename;
+
+      
+      const cv_url = await uploadFileToDrive(filePath, fileName);
+
+      fs.unlinkSync(filePath);
+
+      const password = generatePassword(12);
+
+    
+      const newPost = new Post({
+        name,
+        email,
+        number,
+        niveau,
+        cv_url,
+        jobId,
+        password,
       });
-    }
 
-    const cv_url = `/uploads/${req.file.filename}`;
-    const password = generatePassword(12);
+      await newPost.save();
 
-    const newPost = new Post({
-      name,
-      email,
-      number,
-      niveau,
-      cv_url,
-      jobId,
-      password,
+      res.status(201).json({
+        message: "Candidature ajoutée avec succès",
+        post: newPost,
+      });
     });
-    await newPost.save();
-
-    res
-      .status(201)
-      .json({ message: "Candidature ajoutée avec succès", post: newPost });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -42,7 +112,6 @@ exports.addPost = async (req, res) => {
     });
   }
 };
-
 exports.getAllPost = async (req, res) => {
   try {
     const postes = await Post.find().populate("jobId");

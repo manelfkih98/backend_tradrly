@@ -141,7 +141,7 @@ exports.deleteOffre = async (req, res) => {
 
 exports.getOffreStage = async (req, res) => {
   try {
-    const offreStage = await Offre.find({ type: "stage" });
+    const offreStage = await Offre.find({ type: "stage" }).populate("departement");
 
     if (offreStage.length === 0) {
       return res
@@ -159,7 +159,7 @@ exports.getOffreStage = async (req, res) => {
 
 exports.getOffreJob = async (req, res) => {
   try {
-    const offreJob = await Offre.find({ type: "job" });
+    const offreJob = await Offre.find({ type: "job" }).populate("departement");
     if (offreJob.length === 0) {
       return res.status(404).json({ message: "Aucune offre de job trouvée" });
     }
@@ -191,4 +191,26 @@ exports.deactivateOffre = async (req, res) => {
     return res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
+
+exports.activateOffre = async (req, res) => {
+  try {
+    const { id_offre } = req.params; 
+
+    const offreDes = await Offre.findByIdAndUpdate(
+      id_offre,
+      { status: true }, 
+      { new: true } 
+    );
+
+    if (!offreDes) {
+      return res.status(404).json({ message: "Offre non trouvée" });
+    }
+
+    return res.status(200).json({ message: "Offre désactivée avec succès", offre: offreDes });
+
+  } catch (error) {
+    return res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
 

@@ -2,10 +2,8 @@
 
  const DepartShema =new mongoose.Schema({
    NameDep:{
-
     type:String,
     require:true
-    
    },
    DescrpDetp: {
     type:String,
