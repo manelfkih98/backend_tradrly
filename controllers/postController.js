@@ -11,6 +11,7 @@ const auth = new google.auth.GoogleAuth({
   scopes: ["https://www.googleapis.com/auth/drive.file"],
 });
 const drive = google.drive({ version: "v3", auth });
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/"); 
@@ -35,7 +36,7 @@ async function uploadFileToDrive(filePath, fileName) {
       },
     });
 
-    
+    // Rendre le fichier accessible à tous
     await drive.permissions.create({
       fileId: response.data.id,
       requestBody: {
@@ -44,7 +45,7 @@ async function uploadFileToDrive(filePath, fileName) {
       },
     });
 
-   
+    // Récupérer le lien de visualisation
     const result = await drive.files.get({
       fileId: response.data.id,
       fields: "webViewLink",
@@ -76,23 +77,27 @@ exports.addPost = async (req, res) => {
         });
       }
 
-      const filePath = req.file.path;
+      const filePath = req.file.path; 
       const fileName = req.file.filename;
 
-      
-      const cv_url = await uploadFileToDrive(filePath, fileName);
+     
+      const localCvUrl = `/uploads/${fileName}`;
 
-      fs.unlinkSync(filePath);
+     
+      const googleDriveCvUrl = await uploadFileToDrive(filePath, fileName);
+
+      
 
       const password = generatePassword(12);
 
-    
+     
       const newPost = new Post({
         name,
         email,
         number,
         niveau,
-        cv_url,
+        cv_local_url: localCvUrl,  
+        cv_google_drive_url: googleDriveCvUrl, 
         jobId,
         password,
       });
@@ -112,6 +117,8 @@ exports.addPost = async (req, res) => {
     });
   }
 };
+
+
 exports.getAllPost = async (req, res) => {
   try {
     const postes = await Post.find().populate("jobId");
@@ -120,7 +127,13 @@ exports.getAllPost = async (req, res) => {
       return res.status(404).json({ message: "Aucune candidature trouvée" });
     }
 
-    res.status(200).json(postes);
+    const postsWithCvUrls = postes.map(post => ({
+      ...post._doc,
+      cv_local_url: `${req.protocol}://${req.get('host')}/uploads/${path.basename(post.cv_local_url)}`,
+      cv_google_drive_url: post.cv_google_drive_url, // Déjà stocké dans MongoDB
+    }));
+
+    res.status(200).json(postsWithCvUrls);
   } catch (error) {
     res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
@@ -309,3 +322,6 @@ exports.getPostWithoutOffre = async (req,res)=>
     })
 
 }}
+
+  // Envoyer le fichier PDF
+ 

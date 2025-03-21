@@ -14,4 +14,5 @@ router.post("/addPost", addPost);
  router.get('/postWithoutOffre',getPostWithoutOffre)
 
 
+
 module.exports=router

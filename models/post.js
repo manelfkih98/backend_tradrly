@@ -25,10 +25,14 @@ const PostSchema = new mongoose.Schema({
         required: true,
        
     },
-    cv_url: {
-        type: String,
-        required: true
-    },
+    cv_local_url: {
+        type: String, 
+        required: true,
+      },
+      cv_google_drive_url: {
+        type: String, 
+        required: true,
+      },
       password:{type:String,require}
     
 }, { timestamps: true });  

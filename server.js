@@ -16,12 +16,13 @@ const qcmRoutes = require('./routers/qcmRoutes');
 
 const app = express();
 app.use(cookieParser());
+const path = require('path');
 app.use(cors());
 app.use(express.json());
 connectDB();
 
 const PORT = process.env.PORT || 3000;
-const BASE_URL = "/tradrly/api/v1";  // Définition de la base URL
+const BASE_URL = "/tradrly/api/v1";  
 
 app.use(`${BASE_URL}/project`, projectRoutes);
 app.use(`${BASE_URL}/admin`, adminRoutes);
@@ -33,9 +34,7 @@ app.use(`${BASE_URL}/reponce`, reponceRoutes);
 app.use(`${BASE_URL}/propos`, propoRoutes);
 app.use(`${BASE_URL}/question`, questionRoutes);
 app.use(`${BASE_URL}/qcm`, qcmRoutes);
-
-//app.use('/uploads', express.static('uploads'));
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.listen(PORT, () => {
     console.log(`Serveur démarré sur le port ${PORT}, accessible à http://localhost:${PORT}${BASE_URL}`);
 });
