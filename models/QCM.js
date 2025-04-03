@@ -1,9 +1,13 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const QCMSchema = new mongoose.Schema({
- 
-  questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'question' }], 
-  resulalt:{type:Number,require:true}
+  post_id: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Post",
+    required: true,
+  },
+  questions: [{ type: mongoose.Schema.Types.ObjectId, ref: "question" }],
+  resultat: { type: Number, require: true },
 });
 
-module.exports = mongoose.model('QCM', QCMSchema);
+module.exports = mongoose.model("QCM", QCMSchema);

@@ -21,6 +21,7 @@ app.use(cors());
 app.use(express.json());
 connectDB();
 
+
 const PORT = process.env.PORT || 3000;
 const BASE_URL = "/tradrly/api/v1";  
 

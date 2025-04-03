@@ -1,8 +1,8 @@
 const Post = require("../models/post");
-const {google}=require("googleapis");
-const fs=require("fs");
-const path=require("path");
-const multer=require("multer")
+const { google } = require("googleapis");
+const fs = require("fs");
+const path = require("path");
+const multer = require("multer");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 
@@ -14,10 +14,10 @@ const drive = google.drive({ version: "v3", auth });
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "uploads/"); 
+    cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname)); 
+    cb(null, Date.now() + path.extname(file.originalname));
   },
 });
 const upload = multer({ storage });
@@ -28,7 +28,7 @@ async function uploadFileToDrive(filePath, fileName) {
       requestBody: {
         name: fileName,
         mimeType: "application/pdf",
-        parents: ["1hoyiqu8KlpuRBfeka3CQG88XJG9AW_So"], 
+        parents: ["1hoyiqu8KlpuRBfeka3CQG88XJG9AW_So"],
       },
       media: {
         mimeType: "application/pdf",
@@ -62,7 +62,9 @@ exports.addPost = async (req, res) => {
   try {
     upload.single("file")(req, res, async (err) => {
       if (err) {
-        return res.status(400).json({ message: "Erreur lors de l'upload du fichier" });
+        return res
+          .status(400)
+          .json({ message: "Erreur lors de l'upload du fichier" });
       }
 
       if (!req.file) {
@@ -73,31 +75,27 @@ exports.addPost = async (req, res) => {
 
       if (!name || !email || !number || !niveau || !jobId) {
         return res.status(400).json({
-          message: "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
+          message:
+            "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
         });
       }
 
-      const filePath = req.file.path; 
+      const filePath = req.file.path;
       const fileName = req.file.filename;
 
-     
       const localCvUrl = `/uploads/${fileName}`;
 
-     
       const googleDriveCvUrl = await uploadFileToDrive(filePath, fileName);
-
-      
 
       const password = generatePassword(12);
 
-     
       const newPost = new Post({
         name,
         email,
         number,
         niveau,
-        cv_local_url: localCvUrl,  
-        cv_google_drive_url: googleDriveCvUrl, 
+        cv_local_url: localCvUrl,
+        cv_google_drive_url: googleDriveCvUrl,
         jobId,
         password,
       });
@@ -118,7 +116,6 @@ exports.addPost = async (req, res) => {
   }
 };
 
-
 exports.getAllPost = async (req, res) => {
   try {
     const postes = await Post.find().populate("jobId");
@@ -127,10 +124,12 @@ exports.getAllPost = async (req, res) => {
       return res.status(404).json({ message: "Aucune candidature trouvée" });
     }
 
-    const postsWithCvUrls = postes.map(post => ({
+    const postsWithCvUrls = postes.map((post) => ({
       ...post._doc,
-      cv_local_url: `${req.protocol}://${req.get('host')}/uploads/${path.basename(post.cv_local_url)}`,
-      cv_google_drive_url: post.cv_google_drive_url, // Déjà stocké dans MongoDB
+      cv_local_url: `${req.protocol}://${req.get(
+        "host"
+      )}/uploads/${path.basename(post.cv_local_url)}`,
+      cv_google_drive_url: post.cv_google_drive_url, 
     }));
 
     res.status(200).json(postsWithCvUrls);
@@ -199,6 +198,7 @@ exports.refuser = async (req, res) => {
 
     const info = await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "Email envoyé avec succès!", info });
+    const post = await Post.findByIdAndDelete(req.params.id);
   } catch (error) {
     console.error("Erreur lors de l'envoi de l'email:", error);
     res
@@ -266,36 +266,52 @@ function generatePassword(length) {
 
 exports.addPostWithoutOffre = async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ message: "Le fichier CV est requis." });
-    }
+    upload.single("file")(req, res, async (err) => {
+      if (err) {
+        return res
+          .status(400)
+          .json({ message: "Erreur lors de l'upload du fichier" });
+      }
 
-    const { name, email, number, niveau } = req.body;
+      if (!req.file) {
+        return res.status(400).json({ message: "Le fichier CV est requis." });
+      }
 
-    if (!name || !email || !number || !niveau ) {
-      return res.status(400).json({
-        message:
-          "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
+      const { name, email, number, niveau } = req.body;
+
+      if (!name || !email || !number || !niveau) {
+        return res.status(400).json({
+          message:
+            "Tous les champs sont requis, y compris l'ID de l'offre d'emploi.",
+        });
+      }
+
+      const filePath = req.file.path;
+      const fileName = req.file.filename;
+
+      const localCvUrl = `/uploads/${fileName}`;
+
+      const googleDriveCvUrl = await uploadFileToDrive(filePath, fileName);
+
+      const password = generatePassword(12);
+
+      const newPost = new Post({
+        name,
+        email,
+        number,
+        niveau,
+        cv_local_url: localCvUrl,
+        cv_google_drive_url: googleDriveCvUrl,
+        password,
       });
-    }
 
-    const cv_url = `/uploads/${req.file.filename}`;
-    const password = generatePassword(12);
+      await newPost.save();
 
-    const newPost = new Post({
-      name,
-      email,
-      number,
-      niveau,
-      cv_url,
-      password
-      
+      res.status(201).json({
+        message: "Candidature sans offre ajoutée avec succès",
+        post: newPost,
+      });
     });
-    await newPost.save();
-
-    res
-      .status(201)
-      .json({ message: "Candidature ajoutée avec succès", post: newPost });
   } catch (error) {
     console.error(error);
     res.status(500).json({
@@ -305,23 +321,114 @@ exports.addPostWithoutOffre = async (req, res) => {
   }
 };
 
-exports.getPostWithoutOffre = async (req,res)=>
-{
-  try{
-    const PostWithoutOffre =await Post.find({jobId:null})
-    if(PostWithoutOffre.length==0)
-    {
-      res.status(400).json({message:"aucune post WithoutOffre "})
+exports.getPostWithoutOffre = async (req, res) => {
+  try {
+    const postes = await Post.find({ jobId: null });
+    if (!postes || postes.length === 0) {
+      return res.status(404).json({ message: "Aucune candidature trouvée" });
     }
-    res.status(200).json({post:PostWithoutOffre})
-  }catch (error) {
-    console.error(error);
-    res.status(500).json({
-      message: "Erreur lors de l'ajout de la candidature",
-      error: error.message,
-    })
 
-}}
+    const postsWithCvUrls = postes.map((post) => ({
+      ...post._doc,
+      cv_local_url: `${req.protocol}://${req.get(
+        "host"
+      )}/uploads/${path.basename(post.cv_local_url)}`,
+      cv_google_drive_url: post.cv_google_drive_url, // Déjà stocké dans MongoDB
+    }));
 
-  // Envoyer le fichier PDF
- 
+    res.status(200).json(postsWithCvUrls);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+exports.accepterDemande = async (req, res) => {
+  try {
+    const poste = await Post.findById(req.params.id);
+    if (!poste) {
+      return res.status(404).json({ message: "Candidature non trouvée." });
+    }
+   
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "manelfkih123@gmail.com",
+        pass: "uwze prbc lohc kfzh",
+      },
+    });
+
+    const mailOptions = {
+      from: "manelfkih13@gmail.com",
+      to: poste.email,
+      subject: "Suite favorable à votre candidature",
+      html: `Bonjour ${poste.name},<br><br>
+      Nous avons bien reçu votre demande de candidature au sein de notre entreprise « Tradrly ».<br><br>
+      Après étude de votre profil, nous avons le plaisir de vous informer que votre candidature a été retenue pour la prochaine étape de notre processus de recrutement.<br><br>
+      Veuillez trouver ci-dessous votre mot de passe généré pour accéder à notre plateforme :<br><br>
+      <strong>Mot de passe :</strong> ${poste.password}<br><br>
+      <b>Cordialement,</b><br>
+      L'équipe de recrutement<br>
+      Tradrly<br><br>
+      <a href="http://localhost:3000/" target="_blank">Cliquez ici pour accéder à votre test</a>`,
+    };
+    
+    const info = await transporter.sendMail(mailOptions);
+    res
+      .status(200)
+      .json({ message: "Email d'acceptation envoyé avec succès!", info });
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de l'email:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de l'envoi de l'email", error });
+  }
+};
+exports.refuserDemande = async (req, res) => {
+  try {
+    const poste = await Post.findById(req.params.id);
+
+    if (!poste) {
+      return res.status(404).json({ message: "Candidature non trouvée." });
+    }
+
+
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "manelfkih123@gmail.com",
+        pass: "uwze prbc lohc kfzh", 
+      },
+    });
+
+    const mailOptions = {
+      from: "manelfkih13@gmail.com",
+      to: poste.email,
+      subject: "Réponse à votre candidature chez Tradrly",
+      text: `Bonjour ${poste.name},
+
+Nous avons bien reçu votre demande de candidature spontanée. Après une étude attentive, nous sommes au regret de vous informer que nous ne pouvons pas y donner une suite favorable pour le moment.
+
+Nous vous remercions de l’intérêt porté à notre entreprise et vous souhaitons plein succès dans vos recherches.
+
+Cordialement,
+
+L'équipe de recrutement
+Tradrly`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    res
+      .status(200)
+      .json({ message: "Email de refus envoyé avec succès.", info });
+
+    await Post.findByIdAndDelete(req.params.id);
+  } catch (error) {
+    console.error("Erreur lors de l'envoi de l'email:", error);
+    res
+      .status(500)
+      .json({ message: "Erreur lors de l'envoi de l'email", error });
+  }
+};
+
+// Envoyer le fichier PDF
