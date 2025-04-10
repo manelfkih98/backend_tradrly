@@ -116,15 +116,17 @@ exports.addPost = async (req, res) => {
   }
 };
 
-exports.getAllPost = async (req, res) => {
+exports.getAllPostStage = async (req, res) => {
   try {
-    const postes = await Post.find().populate("jobId");
-
-    if (!postes || postes.length === 0) {
+    const postes = await Post.find({ jobId: { $ne: null } })
+    .populate("jobId");
+  
+  const filtered = postes.filter(post => post.jobId && post.jobId.type === "stage");
+    if (!filtered || filtered.length === 0) {
       return res.status(404).json({ message: "Aucune candidature trouvée" });
     }
 
-    const postsWithCvUrls = postes.map((post) => ({
+    const postsWithCvUrls = filtered.map((post) => ({
       ...post._doc,
       cv_local_url: `${req.protocol}://${req.get(
         "host"
@@ -137,6 +139,32 @@ exports.getAllPost = async (req, res) => {
     res.status(500).json({ message: "Erreur serveur", error: error.message });
   }
 };
+
+
+exports.getAllPostJob = async (req, res) => {
+  try {
+    const postes = await Post.find({ jobId: { $ne: null } })
+    .populate("jobId");
+  
+  const filtered = postes.filter(post => post.jobId && post.jobId.type === "job");
+    if (!filtered || filtered.length === 0) {
+      return res.status(404).json({ message: "Aucune candidature trouvée" });
+    }
+
+    const postsWithCvUrls = filtered.map((post) => ({
+      ...post._doc,
+      cv_local_url: `${req.protocol}://${req.get(
+        "host"
+      )}/uploads/${path.basename(post.cv_local_url)}`,
+      cv_google_drive_url: post.cv_google_drive_url, 
+    }));
+
+    res.status(200).json(postsWithCvUrls);
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
 
 exports.getPostsByJobId = async (req, res) => {
   try {
@@ -431,4 +459,20 @@ Tradrly`,
   }
 };
 
-// Envoyer le fichier PDF
+exports.loginCandidat = async (req, res) => {
+  const { email, password } = req.body;
+  console.log("Données reçues :", req.body);
+
+  try {
+    const candidat = await Post.findOne({ email, password });
+
+    if (!candidat) {
+      return res.status(404).json({ message: "Candidat non trouvé !" });
+    }
+
+    res.status(200).json({ candidat });
+  } catch (error) {
+    res.status(500).json({ message: "Erreur serveur", error: error.message });
+  }
+};
+
